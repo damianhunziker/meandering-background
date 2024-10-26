@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+jQuery(document).ready(function() {
     var canvas = document.createElement('canvas');
     canvas.style.position = 'fixed';
     canvas.style.top = '0';
@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     canvas.style.zIndex = '-1'; // Set z-index to -1 to position the canvas behind the text
-    canvas.style.opacity = '0.2'; // Set canvas opacity to 20%
+    canvas.style.opacity = '0.3'; // Set canvas opacity to 20%
     document.body.appendChild(canvas);
 
     var ctx = canvas.getContext('2d');
@@ -28,30 +28,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function getRandomRadius() {
         if (window.innerWidth <= 768) { // Mobile devices
-            return Math.random() * (canvas.width * 0.25) + (canvas.width * 0.25);
+            var radius = Math.random() * (canvas.width * 1.3) + (canvas.width * 0.4);
+            return radius;
         } else { // Desktop devices
-            return Math.random() * (canvas.width * 0.25) + (canvas.width * 0.1);
+            var radius = Math.random() * (canvas.width * 0.35) + (canvas.width * 0.2);
+            return radius;
         }
     }
 
-    function saveCirclesToSession() {
-        sessionStorage.setItem('circles', JSON.stringify(circles));
+    function saveCanvasImage() {
+        var imageData = canvas.toDataURL();
+        sessionStorage.setItem('canvasImage', imageData);
     }
 
-    function loadCirclesFromSession() {
-        var savedCircles = sessionStorage.getItem('circles');
-        if (savedCircles) {
-            return JSON.parse(savedCircles);
+    function loadCanvasImage() {
+        var imageData = sessionStorage.getItem('canvasImage');
+        if (imageData) {
+            var img = new Image();
+            img.src = imageData;
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
         }
-        return null;
     }
 
-    var circles = loadCirclesFromSession() || [
-        {x: 100, y: 100, vx: 2, vy: 2, radius: getRandomRadius(), color: {...baseColors[0], a: 1}},
-        {x: 200, y: 200, vx: -2, vy: 2, radius: getRandomRadius(), color: {...baseColors[1], a: 1}},
-        {x: 300, y: 300, vx: 2, vy: -2, radius: getRandomRadius(), color: {...baseColors[2], a: 1}},
-        {x: 400, y: 400, vx: -2, vy: -2, radius: getRandomRadius(), color: {...baseColors[3], a: 1}},
-        {x: 500, y: 500, vx: 2, vy: 2, radius: getRandomRadius(), color: {...baseColors[4], a: 1}}
+    var circles = [
+        {x: 100, y: 100, vx: 0.5, vy: 0.5, radius: getRandomRadius(), color: {...baseColors[0], a: 1}},
+        {x: 200, y: 200, vx: -0.5, vy: 0.5, radius: getRandomRadius(), color: {...baseColors[1], a: 1}},
+        {x: 300, y: 300, vx: 0.5, vy: -0.5, radius: getRandomRadius(), color: {...baseColors[2], a: 1}},
+        {x: 400, y: 400, vx: -0.5, vy: -0.5, radius: getRandomRadius(), color: {...baseColors[3], a: 1}},
     ];
 
     var mouseX = window.innerWidth / 2;
@@ -116,8 +121,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return Math.max(min, Math.min(max, value));
     }
 
+    // Modify the color update function to animate the colors more slowly
     function updateColors() {
-        var time = Date.now() * 0.002;
+        var time = Date.now() * 0.0005; // Slow down the color animation
         circles.forEach(function(circle, index) {
             let baseColor = baseColors[index % baseColors.length];
             circle.color.r = clamp(Math.floor((Math.sin(time + index) + 1) / 2 * 255), 0, 255);
@@ -161,9 +167,10 @@ document.addEventListener('DOMContentLoaded', function () {
             ctx.fill();
         });
 
-        saveCirclesToSession();
+        //saveCanvasImage();
         requestAnimationFrame(animate);
     }
 
+    loadCanvasImage();
     animate();
 });
